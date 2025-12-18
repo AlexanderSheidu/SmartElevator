@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Elevator System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Smart Elevator System</h1>
+
+    <!-- Real-time error message display -->
+    <div id="error-message" style="color: red; font-weight: bold; margin-bottom: 10px;"></div>
+
+    <!-- Elevator assignment and ETA -->
+    <div class="status-display">
+      <p id="assigned-elevator">Assigned Elevator: --</p>
+      <p id="eta">ETA: -- seconds</p>
+    </div>
+
+    <!-- Floor buttons -->
+    <div class="floor-buttons">
+      <p>Select a floor:</p>
+      <div class="buttons">
+        <button class="floor-btn" data-floor="1">1</button>
+        <button class="floor-btn" data-floor="2">2</button>
+        <button class="floor-btn" data-floor="3">3</button>
+        <button class="floor-btn" data-floor="4">4</button>
+        <button class="floor-btn" data-floor="5">5</button>
+        <button class="floor-btn" data-floor="6">6</button>
+        <button class="floor-btn" data-floor="7">7</button>
+        <button class="floor-btn" data-floor="8">8</button>
+        <button class="floor-btn" data-floor="9">9</button>
+        <button class="floor-btn" data-floor="10">10</button>
+      </div>
+    </div>
+
+    <!-- Bottom controls -->
+    <div class="controls">
+      <button id="cancel-btn">Cancel Request</button>
+    </div>
+
+    <!-- Help Button -->
+    <div class="bottom-buttons">
+      <button class="special-btn help-btn" onclick="openHelpFile()">Help</button>
+    </div>
+
+    <!-- QR code -->
+    <div class="qr-section">
+      <p>For more information:</p>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://www.companionlink.com/blog/2025/02/how-smart-elevator-technology-is-transforming-business-operations-and-efficiency/" alt="QR Code" />
+    </div>
+  </div>
+
+  <!-- Modal for Help Button -->
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h2>Emergency Instructions</h2>
+      <p>In case of emergency, please follow these steps:</p>
+      <ul>
+        <li>Press the red emergency button to stop the elevator.</li>
+        <li>Wait for the elevator technician to arrive.</li>
+        <li>If necessary, call 911.</li>
+        <li>Follow the emergency exit instructions posted in the elevator.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!-- Admin Dashboard - Smart Elevator -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard - Smart Elevator</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    select, button {
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Dashboard</h1>
+
+    <!-- Total Time Saved Display -->
+    <p><strong>Total Time Saved:</strong> <span id="total-time-saved">0</span> seconds</p>
+
+    <!-- Sorting + Refresh Controls -->
+    <div class="controls">
+      <label for="sortBy">Sort By:</label>
+      <select id="sortBy">
+        <option value="id">Trip ID</option>
+        <option value="smart">Smart Elevator Time</option>
+        <option value="traditional">Traditional Elevator Time</option>
+        <option value="saved">Time Saved</option>
+      </select>
+
+      <button id="toggleOrder">Ascending</button>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <!-- Chart -->
+    <canvas id="efficiencyChart" width="400" height="200"></canvas>
+
+    <!-- Table of trips -->
+    <table id="tripDataTable">
+      <thead>
+        <tr>
+          <th>Trip ID</th>
+          <th>Smart Elevator Time (s)</th>
+          <th>Traditional Elevator Time (s)</th>
+          <th>Time Saved (s)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dynamic trip rows inserted here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('efficiencyChart').getContext('2d');
+    let efficiencyChart;
+
+    let currentSortBy = 'id';
+    let ascending = true;
+
+    // Sort dropdown change event
+    document.getElementById('sortBy').addEventListener('change', e => {
+      currentSortBy = e.target.value;
+      loadTripData();
+    });
+
+    // Ascending/descending toggle
+    document.getElementById('toggleOrder').addEventListener('click', () => {
+      ascending = !ascending;
+      document.getElementById('toggleOrder').textContent = ascending ? 'Ascending' : 'Descending';
+      loadTripData();
+    });
+
+    // Manual refresh button
+    document.getElementById('refreshBtn').addEventListener('click', loadTripData);
+
+    // Main data loading function
+    async function loadTripData() {
+      try {
+        const response = await fetch('http://localhost:8080/api/trips');
+        const trips = await response.json();
+
+        // Preprocess values for sorting and display
+        trips.forEach(trip => {
+          trip.smart = trip.smartDurationMs / 1000;
+          trip.traditional = trip.traditionalDurationMs / 1000;
+          trip.saved = trip.traditional - trip.smart;
+        });
+
+        // Apply sorting
+        trips.sort((a, b) => {
+          let valueA = a[currentSortBy];
+          let valueB = b[currentSortBy];
+          return ascending ? valueA - valueB : valueB - valueA;
+        });
+
+        // Initialize containers
+        const labels = [];
+        const smartTimes = [];
+        const traditionalTimes = [];
+        const timeSaved = [];
+        const tableBody = document.querySelector('#tripDataTable tbody');
+        let totalSaved = 0;
+
+        tableBody.innerHTML = ''; // Clear previous rows
+
+        // Populate rows
+        trips.forEach((trip, index) => {
+          totalSaved += trip.saved;
+
+          labels.push(`Trip ${trip.id}`);
+          smartTimes.push(trip.smart.toFixed(2));
+          traditionalTimes.push(trip.traditional.toFixed(2));
+          timeSaved.push(trip.saved.toFixed(2));
+
+          const row = tableBody.insertRow();
+          row.innerHTML = `
+            <td>${trip.id}</td>
+            <td>${trip.smart.toFixed(2)}</td>
+            <td>${trip.traditional.toFixed(2)}</td>
+            <td>${trip.saved.toFixed(2)}</td>
+          `;
+        });
+
+        // Show total time saved
+        document.getElementById('total-time-saved').textContent = totalSaved.toFixed(2);
+
+        // Destroy old chart if needed
+        if (efficiencyChart) {
+          efficiencyChart.destroy();
+        }
+
+        // Render new chart
+        efficiencyChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Smart Elevator Time (s)',
+                data: smartTimes,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                fill: false
+              },
+              {
+                label: 'Traditional Elevator Time (s)',
+                data: traditionalTimes,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                fill: false
+              },
+              {
+                label: 'Time Saved (s)',
+                data: timeSaved,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderDash: [5, 5],
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Elevator Efficiency Comparison'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            }
+          }
+        });
+
+      } catch (err) {
+        alert("Failed to load trip data. Please make sure the backend is running.");
+        console.error(err);
+      }
+    }
+
+    // On page load
+    window.onload = loadTripData;
+  </script>
+</body>
+</html>
